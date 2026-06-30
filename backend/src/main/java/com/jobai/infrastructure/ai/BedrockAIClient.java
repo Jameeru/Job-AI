@@ -301,7 +301,7 @@ public class BedrockAIClient {
      * Invokes the Claude model via Bedrock Runtime.
      * Uses the Messages API format (Anthropic Claude).
      */
-    private String invoke(String userMessage) {
+    public String invoke(String userMessage) {
         try {
             // Claude Messages API request body
             Map<String, Object> requestBody = Map.of(

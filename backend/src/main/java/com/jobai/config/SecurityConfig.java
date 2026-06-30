@@ -55,7 +55,8 @@ public class SecurityConfig {
                     "/api/docs/**",
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
-                    "/swagger-ui.html"
+                    "/swagger-ui.html",
+                    "/api/test-ai"
                 ).permitAll()
                 // Everything else requires authentication
                 .anyRequest().authenticated()
