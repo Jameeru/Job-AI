@@ -116,6 +116,20 @@ public class UserProfileController {
             // 2. Send to AI to get JSON representing UpdateUserProfileRequest
             String jsonProfile = bedrockAIClient.extractProfileFromResume(resumeText);
             
+            // Clean up any markdown code blocks returned by Claude
+            if (jsonProfile != null) {
+                jsonProfile = jsonProfile.trim();
+                if (jsonProfile.startsWith("```json")) {
+                    jsonProfile = jsonProfile.substring(7);
+                } else if (jsonProfile.startsWith("```")) {
+                    jsonProfile = jsonProfile.substring(3);
+                }
+                if (jsonProfile.endsWith("```")) {
+                    jsonProfile = jsonProfile.substring(0, jsonProfile.length() - 3);
+                }
+                jsonProfile = jsonProfile.trim();
+            }
+            
             // 3. Parse JSON into DTO
             UpdateUserProfileRequest request = objectMapper.readValue(jsonProfile, UpdateUserProfileRequest.class);
             
