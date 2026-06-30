@@ -231,6 +231,70 @@ public class BedrockAIClient {
         return invoke(prompt);
     }
 
+    /**
+     * Extracts structured profile data from raw resume text using AI.
+     *
+     * @param resumeText raw text extracted from a PDF resume
+     * @return JSON string representing UpdateUserProfileRequest
+     */
+    public String extractProfileFromResume(String resumeText) {
+        String prompt = """
+            You are an expert technical recruiter and resume parser.
+            I will provide you with the raw text extracted from a candidate's PDF resume.
+            Your task is to parse this text and return it as a structured JSON object.
+            
+            RESUME TEXT:
+            %s
+            
+            Respond ONLY with a valid JSON object in this exact format, conforming to these rules:
+            - Do not include fields if you cannot find them in the resume.
+            - Format dates as "YYYY-MM-DD".
+            - 'skills.category' should be one of: BACKEND, FRONTEND, DATABASE, TOOL, CLOUD, OTHER
+            - 'skills.proficiency' should be one of: BEGINNER, INTERMEDIATE, ADVANCED (guess based on context if not explicit, default to INTERMEDIATE)
+            
+            {
+              "fullName": "Extracted Name",
+              "phone": "Extracted Phone (numbers only, with + if present)",
+              "linkedinUrl": "URL",
+              "githubUrl": "URL",
+              "portfolioUrl": "URL",
+              "collegeName": "College/University Name",
+              "degree": "B.Tech, B.E., B.Sc, etc",
+              "branch": "Computer Science, etc",
+              "graduationYear": 2025,
+              "cgpa": 8.5,
+              "city": "City name",
+              "skills": [
+                {
+                  "skillName": "Java",
+                  "category": "BACKEND",
+                  "proficiency": "INTERMEDIATE"
+                }
+              ],
+              "projects": [
+                {
+                  "projectName": "Name",
+                  "description": "Short description",
+                  "techStack": "Java, Spring Boot",
+                  "githubUrl": "URL",
+                  "liveUrl": "URL",
+                  "startDate": "YYYY-MM-DD",
+                  "endDate": "YYYY-MM-DD"
+                }
+              ],
+              "certifications": [
+                {
+                  "certName": "Name",
+                  "issuer": "Issuer",
+                  "issueDate": "YYYY-MM-DD"
+                }
+              ]
+            }
+            """.formatted(resumeText);
+
+        return invoke(prompt);
+    }
+
     // ── Private helpers ───────────────────────────────────────────
 
     /**

@@ -1,12 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import api from '../api/axios';
 import type { UserProfile } from '../types';
-import { User, Mail, Phone, MapPin, Briefcase, GraduationCap, Link2, Code } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Briefcase, GraduationCap, Link2, Code, FileUp, Loader2 } from 'lucide-react';
+import { EditProfileModal } from '../components/EditProfileModal';
 
 export const Profile: React.FC = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchProfile();
@@ -40,6 +44,46 @@ export const Profile: React.FC = () => {
     }
   };
 
+  const handleSaveProfile = async (data: Partial<UserProfile>) => {
+    try {
+      const response = await api.put<UserProfile>('/profile', data);
+      setProfile(response.data);
+    } catch (err) {
+      console.error('Failed to update profile', err);
+      alert('Failed to update profile. Please try again.');
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      alert('Please upload a PDF file.');
+      return;
+    }
+
+    setIsExtracting(true);
+    const formData = new FormData();
+    formData.append('resume', file);
+
+    try {
+      const response = await api.post<UserProfile>('/profile/resume', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setProfile(response.data);
+      alert('Profile updated successfully from resume!');
+    } catch (err) {
+      console.error('Failed to extract data from resume', err);
+      alert('Failed to extract data from resume. Please try again.');
+    } finally {
+      setIsExtracting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -58,9 +102,34 @@ export const Profile: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Candidate Profile</h1>
-        <button className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 transition-colors">
-          Edit Profile
-        </button>
+        <div className="flex space-x-3">
+          <input
+            type="file"
+            accept=".pdf"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isExtracting}
+            className="inline-flex items-center rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-70"
+          >
+            {isExtracting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <FileUp className="mr-2 h-4 w-4" />
+            )}
+            {isExtracting ? 'Extracting Data...' : 'Upload Resume'}
+          </button>
+          <button
+            onClick={() => setIsEditModalOpen(true)}
+            disabled={isExtracting}
+            className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 transition-colors disabled:opacity-70"
+          >
+            Edit Profile
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -176,6 +245,13 @@ export const Profile: React.FC = () => {
 
         </div>
       </div>
+
+      <EditProfileModal
+        profile={profile}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleSaveProfile}
+      />
     </div>
   );
 };

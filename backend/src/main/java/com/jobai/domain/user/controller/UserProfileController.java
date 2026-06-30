@@ -10,10 +10,15 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import com.jobai.domain.resume.service.PdfExtractionService;
+import com.jobai.infrastructure.ai.BedrockAIClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * REST controller for candidate profile management.
@@ -30,6 +35,7 @@ import org.springframework.web.bind.annotation.*;
  *   <li>DELETE /api/profile         — Deactivate profile</li>
  * </ul>
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/profile")
 @RequiredArgsConstructor
@@ -38,6 +44,9 @@ import org.springframework.web.bind.annotation.*;
 public class UserProfileController {
 
     private final UserProfileService userProfileService;
+    private final PdfExtractionService pdfExtractionService;
+    private final BedrockAIClient bedrockAIClient;
+    private final ObjectMapper objectMapper;
 
     /**
      * POST /api/profile
@@ -87,5 +96,36 @@ public class UserProfileController {
     @Operation(summary = "Deactivate profile (soft delete)")
     public void deactivateProfile(@AuthenticationPrincipal FirebaseToken token) {
         userProfileService.deactivateProfile(token);
+    }
+
+    /**
+     * POST /api/profile/resume
+     * Uploads a resume PDF, extracts text, uses AI to parse it into structured data,
+     * and updates the user's profile automatically.
+     */
+    @PostMapping(value = "/resume", consumes = "multipart/form-data")
+    @Operation(summary = "Upload resume to extract data", description = "Parses PDF and uses AI to update profile fields")
+    public ResponseEntity<UserProfileResponse> uploadResumeToExtract(
+        @AuthenticationPrincipal FirebaseToken token,
+        @RequestPart("resume") MultipartFile resumeFile
+    ) {
+        try {
+            // 1. Extract raw text from PDF
+            String resumeText = pdfExtractionService.extractTextFromPdf(resumeFile);
+            
+            // 2. Send to AI to get JSON representing UpdateUserProfileRequest
+            String jsonProfile = bedrockAIClient.extractProfileFromResume(resumeText);
+            
+            // 3. Parse JSON into DTO
+            UpdateUserProfileRequest request = objectMapper.readValue(jsonProfile, UpdateUserProfileRequest.class);
+            
+            // 4. Update the profile
+            UserProfileResponse updatedProfile = userProfileService.updateProfile(token, request);
+            
+            return ResponseEntity.ok(updatedProfile);
+        } catch (Exception e) {
+            log.error("Failed to process resume upload: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to process resume: " + e.getMessage(), e);
+        }
     }
 }
