@@ -13,7 +13,7 @@ services:
       - key: DB_PASSWORD
         sync: false
       - key: CORS_ALLOWED_ORIGINS
-        value: "https://your-firebase-app-url.web.app" # To be updated after Firebase deploy
+        value: "https://job-ai-58665.web.app"
       - key: BEDROCK_ACCESS_KEY
         sync: false
       - key: BEDROCK_SECRET_KEY
