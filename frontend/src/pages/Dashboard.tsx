@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Building2, MapPin, Briefcase, ExternalLink, ThumbsDown, FileText } from 'lucide-react';
+import { Building2, MapPin, Briefcase, ExternalLink, ThumbsDown, FileText, Search, RefreshCw } from 'lucide-react';
 import api from '../api/axios';
 import type { JobResponse, PageResponse } from '../types';
 
@@ -7,6 +7,8 @@ export const Dashboard: React.FC = () => {
   const [jobs, setJobs] = useState<JobResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [searchMessage, setSearchMessage] = useState('');
 
   useEffect(() => {
     fetchJobs();
@@ -21,6 +23,24 @@ export const Dashboard: React.FC = () => {
       setError('Failed to fetch jobs. Make sure the backend is running.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStartSearch = async () => {
+    try {
+      setSearching(true);
+      setSearchMessage('Searching for matching jobs... This may take 1-2 minutes.');
+      await api.post('/admin/run-job-search');
+      // Wait a bit for background processing then reload
+      setTimeout(async () => {
+        await fetchJobs();
+        setSearchMessage('');
+        setSearching(false);
+      }, 10000);
+    } catch (err) {
+      console.error('Failed to start job search', err);
+      setSearchMessage('Search failed. Please try again.');
+      setSearching(false);
     }
   };
 
@@ -66,18 +86,50 @@ export const Dashboard: React.FC = () => {
             AI-curated fresher roles scoring 8.0 or higher
           </p>
         </div>
-        <div className="text-sm font-medium text-gray-500">
-          Showing {jobs.length} jobs
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-gray-500">
+            Showing {jobs.length} jobs
+          </span>
+          <button
+            id="start-job-search-btn"
+            onClick={handleStartSearch}
+            disabled={searching}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+          >
+            {searching ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <Search className="h-4 w-4" />
+            )}
+            {searching ? 'Searching...' : 'Start Job Search'}
+          </button>
         </div>
       </div>
+
+      {searchMessage && (
+        <div className="mb-6 rounded-lg bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-700 flex items-center gap-2">
+          <RefreshCw className="h-4 w-4 animate-spin shrink-0" />
+          {searchMessage}
+        </div>
+      )}
 
       <div className="space-y-6">
         {jobs.length === 0 ? (
           <div className="glass-panel p-12 text-center rounded-xl">
-            <h3 className="text-lg font-medium text-gray-900">No jobs found</h3>
-            <p className="mt-1 text-gray-500">
-              The scraper hasn't found any matching jobs yet, or they were all rejected.
+            <Search className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900">No jobs found yet</h3>
+            <p className="mt-1 text-gray-500 mb-6">
+              Click "Start Job Search" above to find AI-matched jobs tailored to your profile.
             </p>
+            <button
+              id="start-job-search-empty-btn"
+              onClick={handleStartSearch}
+              disabled={searching}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow hover:bg-primary-700 disabled:opacity-60 transition-all"
+            >
+              <Search className="h-4 w-4" />
+              Start Job Search
+            </button>
           </div>
         ) : (
           jobs.map((job) => {
