@@ -38,8 +38,8 @@ public class BedrockAIClient {
     private final String modelId;
     private final int maxTokens;
 
-    // Claude Sonnet 4.5 — latest active model on AWS Bedrock (cross-region inference profile)
-    private static final String ACTIVE_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0";
+    // Claude Sonnet 4.5 — Asia Pacific cross-region inference profile (Mumbai ap-south-1)
+    private static final String ACTIVE_MODEL_ID = "ap.anthropic.claude-sonnet-4-5-20250929-v1:0";
 
     public BedrockAIClient(
         @Value("${jobai.aws.region}") String region,
