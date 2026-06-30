@@ -38,15 +38,17 @@ public class BedrockAIClient {
     private final String modelId;
     private final int maxTokens;
 
+    // Claude 4 Sonnet — current active model on AWS Bedrock (us-east-1)
+    private static final String ACTIVE_MODEL_ID = "anthropic.claude-sonnet-4-20250514-v1:0";
+
     public BedrockAIClient(
         @Value("${jobai.aws.region}") String region,
-        @Value("${jobai.aws.bedrock.model-id}") String modelId,
         @Value("${jobai.aws.bedrock.max-tokens}") int maxTokens,
         @Value("${AWS_ACCESS_KEY_ID}") String accessKeyId,
         @Value("${AWS_SECRET_ACCESS_KEY}") String secretAccessKey,
         ObjectMapper objectMapper
     ) {
-        this.modelId = modelId;
+        this.modelId = ACTIVE_MODEL_ID;
         this.maxTokens = maxTokens;
         this.objectMapper = objectMapper;
 
@@ -57,7 +59,7 @@ public class BedrockAIClient {
             ))
             .build();
 
-        log.info("Bedrock AI client initialized — model: {}, region: {}", modelId, region);
+        log.info("Bedrock AI client initialized — model: {}, region: {}", ACTIVE_MODEL_ID, region);
     }
 
     // ── Public API ────────────────────────────────────────────────
