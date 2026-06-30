@@ -9,7 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import com.google.firebase.auth.FirebaseToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,45 +31,45 @@ public class ApplicationController {
     @Operation(summary = "Start tracking a new job application")
     @PostMapping
     public ResponseEntity<ApplicationResponse> create(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal FirebaseToken token,
         @Valid @RequestBody CreateApplicationRequest request
     ) {
-        return ResponseEntity.ok(applicationService.create(userDetails.getUsername(), request));
+        return ResponseEntity.ok(applicationService.create(token.getUid(), request));
     }
 
     @Operation(summary = "List all applications (optionally filtered by status)")
     @GetMapping
     public ResponseEntity<List<ApplicationResponse>> list(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal FirebaseToken token,
         @RequestParam(required = false) ApplicationStatus status
     ) {
-        return ResponseEntity.ok(applicationService.listForUser(userDetails.getUsername(), status));
+        return ResponseEntity.ok(applicationService.listForUser(token.getUid(), status));
     }
 
     @Operation(summary = "Get a single application by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ApplicationResponse> getById(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal FirebaseToken token,
         @PathVariable UUID id
     ) {
-        return ResponseEntity.ok(applicationService.findById(userDetails.getUsername(), id));
+        return ResponseEntity.ok(applicationService.findById(token.getUid(), id));
     }
 
     @Operation(summary = "Update the status of an application (e.g., APPLIED → INTERVIEW_SCHEDULED)")
     @PatchMapping("/{id}/status")
     public ResponseEntity<ApplicationResponse> updateStatus(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal FirebaseToken token,
         @PathVariable UUID id,
         @Valid @RequestBody UpdateApplicationStatusRequest request
     ) {
-        return ResponseEntity.ok(applicationService.updateStatus(userDetails.getUsername(), id, request));
+        return ResponseEntity.ok(applicationService.updateStatus(token.getUid(), id, request));
     }
 
     @Operation(summary = "Get application dashboard statistics (counts by status)")
     @GetMapping("/stats")
     public ResponseEntity<ApplicationStatsResponse> getStats(
-        @AuthenticationPrincipal UserDetails userDetails
+        @AuthenticationPrincipal FirebaseToken token
     ) {
-        return ResponseEntity.ok(applicationService.getStats(userDetails.getUsername()));
+        return ResponseEntity.ok(applicationService.getStats(token.getUid()));
     }
 }
