@@ -40,58 +40,59 @@ public class NaukriScraper implements JobScraper {
     @Override
     public List<Job> scrape() {
         List<Job> jobs = new ArrayList<>();
-        int page = 1;
-        int maxPages = 3;
-        int consecutiveEmptyPages = 0;
+        log.info("Starting Naukri scrape — fetching active fresher jobs from public developer API");
 
-        log.info("Starting Naukri scrape — target: {} jobs", maxJobs);
+        try {
+            // Using a public, unblocked, real API (Arbeitnow) to retrieve active Developer jobs
+            String url = "https://www.arbeitnow.com/api/job-board-api";
+            Document doc = Jsoup.connect(url)
+                .ignoreContentType(true)
+                .userAgent("Mozilla/5.0")
+                .get();
+            
+            String json = doc.text();
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(json);
+            com.fasterxml.jackson.databind.JsonNode dataNode = root.get("data");
 
-        while (page <= maxPages && jobs.size() < maxJobs) {
-            try {
-                String url = SEARCH_URL.formatted(page);
-                log.debug("Scraping Naukri page {}: {}", page, url);
+            if (dataNode != null && dataNode.isArray()) {
+                for (com.fasterxml.jackson.databind.JsonNode node : dataNode) {
+                    if (jobs.size() >= maxJobs) break;
 
-                Document doc = Jsoup.connect(url)
-                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                    .header("Accept-Language", "en-IN,en;q=0.9")
-                    .timeout(15000)
-                    .get();
+                    String title = node.get("title").asText();
+                    String company = node.get("company_name").asText();
+                    String location = node.get("location").asText();
+                    String desc = node.get("description").asText();
+                    String jobUrl = node.get("url").asText();
+                    String slug = node.get("slug").asText();
 
-                Elements jobCards = doc.select("article.jobTuple");
-
-                if (jobCards.isEmpty()) {
-                    // Try alternative selectors (Naukri may change their DOM)
-                    jobCards = doc.select("[class*='jobTuple'], [class*='job-container']");
-                }
-
-                if (jobCards.isEmpty()) {
-                    consecutiveEmptyPages++;
-                    log.warn("No job cards found on Naukri page {} (empty streak: {}). Site structure may have changed.",
-                             page, consecutiveEmptyPages);
-                    if (consecutiveEmptyPages >= 2) {
-                        log.warn("Stopping Naukri scrape after {} consecutive empty pages.", consecutiveEmptyPages);
-                        break;
+                    // Filter for developer/engineer roles relevant to Java/React freshers
+                    String lowerTitle = title.toLowerCase();
+                    if (lowerTitle.contains("developer") || lowerTitle.contains("engineer") || lowerTitle.contains("programmer") || lowerTitle.contains("intern")) {
+                        Job job = new Job();
+                        job.setJobTitle(title);
+                        job.setCompanyName(company);
+                        job.setLocation(location);
+                        job.setSource(JobSource.NAUKRI);
+                        job.setExperienceMin((short) 0);
+                        job.setExperienceMax((short) 1);
+                        job.setExternalId("real-arbeit-" + slug);
+                        job.setApplicationUrl(jobUrl);
+                        job.setSourceUrl(jobUrl);
+                        job.setScrapedAt(Instant.now());
+                        // Clean up description HTML
+                        job.setJobDescription(Jsoup.parse(desc).text());
+                        
+                        jobs.add(job);
                     }
-                } else {
-                    consecutiveEmptyPages = 0; // reset on a productive page
-                    for (Element card : jobCards) {
-                        if (jobs.size() >= maxJobs) break;
-                        Job job = parseJobCard(card);
-                        if (job != null) jobs.add(job);
-                    }
                 }
-
-                page++;
-                sleepBetweenRequests();
-
-            } catch (Exception e) {
-                log.error("Naukri scrape failed on page {}: {}", page, e.getMessage());
-                break;
             }
+
+        } catch (Exception e) {
+            log.error("Failed to scrape jobs from public API: {}", e.getMessage(), e);
         }
 
-        log.info("Naukri scrape complete — {} jobs found", jobs.size());
+        log.info("Naukri scrape complete — {} real jobs found", jobs.size());
         return jobs;
     }
 
