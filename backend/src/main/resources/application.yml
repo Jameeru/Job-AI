@@ -94,7 +94,7 @@ jobai:
   aws:
     region: ${AWS_REGION:ap-south-1}
     bedrock:
-      model-id: ${BEDROCK_MODEL_ID:anthropic.claude-3-5-sonnet-20240620-v1:0}
+      model-id: ${BEDROCK_MODEL_ID:anthropic.claude-3-5-sonnet-20241022-v2:0}
       max-tokens: 4096
   scheduler:
     job-search-cron: ${JOB_SEARCH_CRON:0 0 7 * * *}   # 7 AM IST daily
