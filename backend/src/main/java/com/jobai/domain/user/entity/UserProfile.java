@@ -8,8 +8,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -95,15 +95,15 @@ public class UserProfile {
 
     @OneToMany(mappedBy = "userProfile", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<CandidateSkill> skills = new ArrayList<>();
+    private Set<CandidateSkill> skills = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "userProfile", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<CandidateProject> projects = new ArrayList<>();
+    private Set<CandidateProject> projects = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "userProfile", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<CandidateCertification> certifications = new ArrayList<>();
+    private Set<CandidateCertification> certifications = new LinkedHashSet<>();
 
     // ── Lifecycle ─────────────────────────────────────────────────
 
