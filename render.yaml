@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: job-ai-backend
+    env: java
+    plan: free
+    buildCommand: "cd backend && mvn clean package -DskipTests"
+    startCommand: "java -jar backend/target/job-ai-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod"
+    envVars:
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://your-firebase-app-url.web.app" # To be updated after Firebase deploy
+      - key: BEDROCK_ACCESS_KEY
+        sync: false
+      - key: BEDROCK_SECRET_KEY
+        sync: false
+      - key: BEDROCK_REGION
+        value: "us-east-1"
+      - key: AGENT_API_KEY
+        generateValue: true
+
+  - type: worker
+    name: job-ai-playwright-agent
+    env: docker
+    plan: free
+    dockerfilePath: ./playwright-agent/Dockerfile
+    dockerContext: ./playwright-agent
+    envVars:
+      - key: API_URL
+        value: "https://job-ai-backend.onrender.com/api" # Adjust to match actual backend URL
+      - key: AGENT_API_KEY
+        fromService:
+          type: web
+          name: job-ai-backend
+          envVarKey: AGENT_API_KEY

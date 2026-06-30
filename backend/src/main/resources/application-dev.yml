@@ -1,0 +1,43 @@
+# ─────────────────────────────────────────────────
+# Development Profile — uses .env / IDE environment variables
+# Run with: SPRING_PROFILES_ACTIVE=dev
+# ─────────────────────────────────────────────────
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: JobAI-Dev-Pool
+      minimum-idle: 2
+      maximum-pool-size: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      # Neon PostgreSQL requires SSL
+      data-source-properties:
+        sslMode: require
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate         # Flyway manages schema; Hibernate only validates
+
+logging:
+  level:
+    com.jobai: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Allow Swagger UI in dev
+springdoc:
+  swagger-ui:
+    enabled: true
+
+jobai:
+  cors:
+    allowed-origins: http://localhost:5173,http://localhost:3000
+  scheduler:
+    enabled: false               # Disable auto-scheduler in dev; trigger manually

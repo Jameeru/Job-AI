@@ -1,0 +1,41 @@
+# Git tracked files — everything else is versioned
+# ── Secrets & Local Config ──────────────────────────────────
+.env
+*.env.local
+*.env.production
+
+# Firebase service account (NEVER commit this)
+backend/src/main/resources/firebase-service-account.json
+
+# ── Java / Maven ────────────────────────────────────────────
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/
+!.mvn/wrapper/maven-wrapper.properties
+
+# ── Node.js ─────────────────────────────────────────────────
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# ── Generated Files ─────────────────────────────────────────
+generated/
+
+# ── IDE ─────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+
+# ── Logs ────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Docker ──────────────────────────────────────────────────
+.dockerignore

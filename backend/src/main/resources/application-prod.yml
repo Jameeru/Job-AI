@@ -1,0 +1,43 @@
+# ─────────────────────────────────────────────────
+# Production Profile — reads all values from Render env vars
+# Run with: SPRING_PROFILES_ACTIVE=prod
+# ─────────────────────────────────────────────────
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: JobAI-Prod-Pool
+      minimum-idle: 1
+      maximum-pool-size: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      data-source-properties:
+        sslMode: require
+
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+
+logging:
+  level:
+    root: WARN
+    com.jobai: INFO
+
+# Disable Swagger UI in production (security best practice)
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+
+jobai:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  scheduler:
+    enabled: true

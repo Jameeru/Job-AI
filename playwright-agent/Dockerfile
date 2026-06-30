@@ -1,0 +1,11 @@
+FROM mcr.microsoft.com/playwright:v1.44.1-jammy
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npx tsc
+
+CMD ["node", "dist/index.js"]
