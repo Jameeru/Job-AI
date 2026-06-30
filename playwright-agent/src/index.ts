@@ -2,8 +2,17 @@ import { AutomationAgent } from './agent';
 import { NaukriStrategy } from './portals/naukri';
 import { FounditStrategy } from './portals/foundit';
 import dotenv from 'dotenv';
+import http from 'http';
 
 dotenv.config();
+
+const port = process.env.PORT || 3000;
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Playwright Agent is running\n');
+}).listen(port, () => {
+  console.log(`Health check server listening on port ${port}`);
+});
 
 async function main() {
   console.log('Starting JOB AI Playwright Automation Agent...');

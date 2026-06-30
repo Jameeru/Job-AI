@@ -23,7 +23,7 @@ services:
       - key: AGENT_API_KEY
         generateValue: true
 
-  - type: worker
+  - type: web
     name: job-ai-playwright-agent
     env: docker
     plan: free
