@@ -163,12 +163,22 @@ export const Profile: React.FC = () => {
           <div className="space-y-3 pt-4 border-t border-gray-100">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Links</h3>
             {profile.linkedinUrl && (
-              <a href={profile.linkedinUrl} className="flex items-center text-sm text-blue-600 hover:underline">
+              <a 
+                href={profile.linkedinUrl.startsWith('http') ? profile.linkedinUrl : `https://${profile.linkedinUrl}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center text-sm text-blue-600 hover:underline"
+              >
                 <Link2 className="mr-3 h-5 w-5" /> LinkedIn
               </a>
             )}
             {profile.githubUrl && (
-              <a href={profile.githubUrl} className="flex items-center text-sm text-gray-800 hover:underline">
+              <a 
+                href={profile.githubUrl.startsWith('http') ? profile.githubUrl : `https://${profile.githubUrl}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center text-sm text-gray-800 hover:underline"
+              >
                 <Link2 className="mr-3 h-5 w-5" /> GitHub
               </a>
             )}

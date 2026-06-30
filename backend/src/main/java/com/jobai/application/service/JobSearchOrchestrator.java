@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -90,6 +91,8 @@ public class JobSearchOrchestrator {
         int totalAccepted = 0;
         int totalRejected = 0;
 
+        List<Job> allScrapedJobs = new ArrayList<>();
+
         for (JobScraper scraper : scrapers) {
             JobSource source = scraper.getSource();
             log.info("Running scraper: {}", source);
@@ -97,30 +100,33 @@ public class JobSearchOrchestrator {
             List<Job> scraped;
             try {
                 scraped = scraper.scrape();
+                if (scraped != null) {
+                    allScrapedJobs.addAll(scraped);
+                }
             } catch (Exception e) {
                 log.error("Scraper {} failed: {}", source, e.getMessage(), e);
-                continue;
             }
-            totalScraped += scraped.size();
+        }
 
-            for (Job job : scraped) {
-                if (isDuplicate(job)) continue;
+        totalScraped = allScrapedJobs.size();
 
-                totalNew++;
-                Job analysed = analyseAndEnrich(job, candidateProfile);
+        for (Job job : allScrapedJobs) {
+            if (isDuplicate(job)) continue;
 
-                if (analysed.getMatchScore() != null &&
-                    analysed.getMatchScore().doubleValue() >= minMatchScore) {
-                    totalAccepted++;
-                } else {
-                    totalRejected++;
-                }
+            totalNew++;
+            Job analysed = analyseAndEnrich(job, candidateProfile);
 
-                try {
-                    jobRepository.save(analysed);
-                } catch (Exception e) {
-                    log.warn("Failed to save job [{} @ {}]: {}", job.getJobTitle(), source, e.getMessage());
-                }
+            if (analysed.getMatchScore() != null &&
+                analysed.getMatchScore().doubleValue() >= minMatchScore) {
+                totalAccepted++;
+            } else {
+                totalRejected++;
+            }
+
+            try {
+                jobRepository.save(analysed);
+            } catch (Exception e) {
+                log.warn("Failed to save job [{} @ {}]: {}", job.getJobTitle(), job.getSource(), e.getMessage());
             }
         }
 
