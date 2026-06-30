@@ -35,7 +35,8 @@ public class Job {
     private String externalId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "source", nullable = false, length = 30)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "source", nullable = false)
     private JobSource source;
 
     @Column(name = "job_title", nullable = false, length = 255)
