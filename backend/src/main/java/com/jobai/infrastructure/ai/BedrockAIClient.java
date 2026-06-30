@@ -42,8 +42,8 @@ public class BedrockAIClient {
         @Value("${jobai.aws.region}") String region,
         @Value("${jobai.aws.bedrock.model-id}") String modelId,
         @Value("${jobai.aws.bedrock.max-tokens}") int maxTokens,
-        @Value("${BEDROCK_ACCESS_KEY}") String accessKeyId,
-        @Value("${BEDROCK_SECRET_KEY}") String secretAccessKey,
+        @Value("${AWS_ACCESS_KEY_ID}") String accessKeyId,
+        @Value("${AWS_SECRET_ACCESS_KEY}") String secretAccessKey,
         ObjectMapper objectMapper
     ) {
         this.modelId = modelId;
