@@ -116,18 +116,14 @@ public class UserProfileController {
             // 2. Send to AI to get JSON representing UpdateUserProfileRequest
             String jsonProfile = bedrockAIClient.extractProfileFromResume(resumeText);
             
-            // Clean up any markdown code blocks returned by Claude
+            // Clean up any conversational text or markdown code blocks returned by Claude
             if (jsonProfile != null) {
-                jsonProfile = jsonProfile.trim();
-                if (jsonProfile.startsWith("```json")) {
-                    jsonProfile = jsonProfile.substring(7);
-                } else if (jsonProfile.startsWith("```")) {
-                    jsonProfile = jsonProfile.substring(3);
+                int startIndex = jsonProfile.indexOf('{');
+                int endIndex = jsonProfile.lastIndexOf('}');
+                
+                if (startIndex != -1 && endIndex != -1 && startIndex < endIndex) {
+                    jsonProfile = jsonProfile.substring(startIndex, endIndex + 1);
                 }
-                if (jsonProfile.endsWith("```")) {
-                    jsonProfile = jsonProfile.substring(0, jsonProfile.length() - 3);
-                }
-                jsonProfile = jsonProfile.trim();
             }
             
             // 3. Parse JSON into DTO
@@ -139,7 +135,8 @@ public class UserProfileController {
             return ResponseEntity.ok(updatedProfile);
         } catch (Exception e) {
             log.error("Failed to process resume upload: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to process resume: " + e.getMessage(), e);
+            throw new org.springframework.web.server.ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "Failed to process resume: " + e.getMessage(), e);
         }
     }
 }
